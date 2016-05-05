@@ -1,26 +1,23 @@
 # Lightweight User Interface
 
-<img src="http://fs5.directupload.net/images/151207/ltl76bsj.png" align="right" />
+This version is intended to be compiled with emscripten and to be run on webgl 1 / GL-ES2
+only tobspr version is expected to work normaly you've been warned !
 
+<img src="http://fs5.directupload.net/images/151207/ltl76bsj.png" align="right" />
 
 ### Requirements
 
-- **Panda3D SDK** (recent devel version)
-- **CMake**
+- rdb python/em modules and special third party modules and **Panda3D SDK** (recent devel version)
+  
+  Please refer to panda forum for more information about building panda for emscripten.
 
 ### Installation
 
-Run `python update_module_builder.py`. This will create a build file in the current directory, which you can then run with `python build.py`.
-Now there should be a `lui.pyd` or `lui.so` depending on your system.
-
-If you are on **windows**, copy the .pyd into `PATH_TO_PANDA_SDK/panda3d/lui.pyd`.
-
-If you are on **linux**, copy the .so into `usr/lib/panda3d/lui.so`
-
+please read the disclaimer at the top
 
 ### Running the Samples
 
-You can find various samples for the different LUI components in the `Demos` folder.
+look at the end of Builtin/__init__.py
 
 ### Documentation
 
