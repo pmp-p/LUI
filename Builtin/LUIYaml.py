@@ -54,6 +54,7 @@ class YamlUI:
 
         #hold hashes of luiobjects constructs
         self.gui = []
+        self.msg = {}
 
         self.kw = kw
 
@@ -93,6 +94,11 @@ class YamlUI:
             err("%s %s : %s not found" ,' ' * lvl, self.parent,param )
         return None
 
+    def event(self,e):
+        msg  = self.msg.get( hash(e.get_sender()) , '')
+        print("\nYamlUI.event\ndef on_%s_( self, %s ): pass" %( e.get_sender().name, e ) )
+        print("\nYamlUI.event\ndef on_%s_%s( self, msg='%s' ): pass" %( e.get_sender().name, e.name,msg ) )
+        return msg
 
     def get_by_hash(self,param,parent=None,lvl=0):
         for child in (parent or self.parent).get_children():
@@ -124,7 +130,7 @@ class YamlUI:
 
         self.ui_data={}
         code=None
-        self.all_binds={}   # {element:{event:func}}
+        self.all_binds= []   # {element:{event:func}}
         # first, iterate over the parsed datastructure
         # UI elements will be created immediately
 
@@ -143,14 +149,22 @@ class YamlUI:
 
 
         # finally, execute the bind statements, as they might use custom code from yaml
-        for element in self.all_binds:
-            luiobj = self.get_by_name(element)
-            binds = self.all_binds[element]
-            for event in binds:
-                func = binds[event]
-                func = self.event
-                print("%s.%s event has been set" % (luiobj.name, event) )
-                luiobj.bind(event,func)
+        while self.all_binds:
+            binds = self.all_binds.pop()
+            hofobj = binds.pop('hash')
+            nofobj = binds.pop('name')
+            if hofobj=='*':
+                for luiobj in map( self.get_by_hash, self.gui ):
+                    if luiobj.name == nofobj:
+                        for event in binds:
+                            print("%s.%s event has been set %s" % (luiobj.name, event, binds.get(event) ) )
+                            luiobj.bind(event,self.event)
+            else:
+                luiobj = self.get_by_hash( hofobj )
+                for event in binds:
+                    self.msg[ hofobj ] = binds.get(event)
+                    print("%s.%s event has been set %s" % (luiobj.name, event, binds.get(event) ) )
+                    luiobj.bind(event,self.event)
 
 
 
@@ -176,22 +190,19 @@ class YamlUI:
             children  = self.extract_kw(element_data, "children")
 
 
-            if binds:
-                self.all_binds[name] = binds
-
-
             kw = element_data
             if formatlist:
                 self.format_kw(kw, formatlist)
+
             # PROBLEM: LUIHorizontalLayout needs a parent, but shouldn't the parent be specified using parentLayout.add(obj) ????
             parentToLayout = isinstance(parent, LUIBaseLayout)
             layoutChild    = issubclass(typedef, LUIBaseLayout)
+
             if not parentToLayout:
                 kw["parent"] = parent
-            else:
-                if layoutChild: # LUILayouts need a parent object passed
-                    parent_dummy = LUIObject()
-                    kw["parent"] = parent_dummy
+
+            elif layoutChild: # LUILayouts need a parent object passed
+                kw.setdefault("parent", LUIObject() )
 
 
 
@@ -212,6 +223,10 @@ class YamlUI:
 
             self.get_family_members( obj )
 
+            if binds:
+                binds['hash'] = hash(obj)
+                binds['name'] = name
+                self.all_binds.append( binds )
 
 
             if parentToLayout:

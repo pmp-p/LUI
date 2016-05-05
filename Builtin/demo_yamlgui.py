@@ -81,7 +81,37 @@ y2 = """
             type: LUIButton
             text: back to the other menu!
             bind:
-                click: toMain
+                click: toMain1
+
+        - main_button:
+            type: LUIButton
+            text: back to the other menu!
+            bind:
+                click: toMain2
+
+        - main_button:
+            type: LUIButton
+            text: back to the other menu!
+            bind:
+                click: toMain3
+
+        - main_button:
+            type: LUIButton
+            text: back to the other menu!
+            bind:
+                click: toMain4
+
+        - main_button:
+            type: LUIButton
+            text: back to the other menu!
+            bind:
+                click: toMain5
+
+        - main_button:
+            type: LUIButton
+            text: back to the other menu!
+            bind:
+                click: toMain6
 
 
 # prefab for instancing
@@ -107,8 +137,7 @@ y2 = """
 class Menu1(LUIYaml.YamlUI):
 
     def event(self,e):
-        print("YamlUI.event\ndef on_%s_( self, %s )" %( e.get_sender().name, e ) )
-        print("YamlUI.event\ndef on_%s_%s( self )" %( e.get_sender().name, e.name ) )
+        msg=LUIYaml.YamlUI.event(self,e)
 
         self.deleteGui()
         Menu2( parent = base.region.root, name='menu2', yaml = y2 , top=100,left=100 )
@@ -116,8 +145,7 @@ class Menu1(LUIYaml.YamlUI):
 class Menu2(LUIYaml.YamlUI):
 
     def event(self,e):
-        print("YamlUI.event\ndef on_%s_( self, %s )" %( e.get_sender().name, e ) )
-        print("YamlUI.event\ndef on_%s_%s( self )" %( e.get_sender().name, e.name ) )
+        msg=LUIYaml.YamlUI.event(self,e)
 
         self.deleteGui()
         Menu1( parent = base.region.root, name='menu1', yaml = y1  )
