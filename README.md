@@ -19,6 +19,9 @@ please read the disclaimer at the top
 
 look at the end of dunder init.py in Builtin
 
+Demo : http://pmp-p.github.io/panda3d-webgl-runtime/index.html
+should be always there a top taskbar, a default window showing panda console + an experimental panda-shell
+
 ### Documentation
 
 There is no official documentation yet, however if you look at the `Demos` folder, there should be a lot of self-explanatory code.
