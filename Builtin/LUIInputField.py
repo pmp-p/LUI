@@ -3,7 +3,7 @@ from LUIObject import LUIObject
 from LUISprite import LUISprite
 from LUILabel import LUILabel
 from LUIInitialState import LUIInitialState
-from LUILayouts import LUIHorizontalStretchedLayout
+from LUIHorizontalStretchedLayout import LUIHorizontalStretchedLayout
 
 __all__ = ["LUIInputField"]
 

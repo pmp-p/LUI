@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from LUIObject import LUIObject
 from LUISprite import LUISprite
-from LUILayouts import LUICornerLayout
+from LUICornerLayout import LUICornerLayout
 from LUIInitialState import LUIInitialState
 from LUIScrollableRegion import LUIScrollableRegion
 

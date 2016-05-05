@@ -6,7 +6,7 @@ from LUIVerticalLayout import LUIVerticalLayout
 from LUIHorizontalLayout import LUIHorizontalLayout
 
 class LUITabbedFrame(LUIFrame):
-    def __init__(self, **kwargs):
+    def __init__(self,*argv, **kwargs):
         super(LUITabbedFrame, self).__init__(**kwargs)
 
         # The main window layout
@@ -25,7 +25,7 @@ class LUITabbedFrame(LUIFrame):
         self.header_to_frame = {}
         self.current_frame = None
 
-        # The main window contents        
+        # The main window contents
         self.main_frame = LUIObject()
         self.main_frame.height = "100%"
         self.main_frame.width = "100%"
@@ -33,10 +33,12 @@ class LUITabbedFrame(LUIFrame):
         # self.main_frame.padding = 0
         self.root_layout.add(self.main_frame, "*")
 
+
     def add(self, header, frame):
         # header
         if isinstance(header, str):
-            header = LUILabel(text = header)
+            header = LUILabel(text = header )
+
         self.header_bar.add(header, "?")
         self.header_to_frame[header] = frame
         header.solid = True
@@ -52,22 +54,11 @@ class LUITabbedFrame(LUIFrame):
         else:
             frame.hide()
 
-    #def remove(self, header):
-    #    if header in self.header_to_frame.keys():
-    #        idx_dict = {idx: elem
-    #                    for idx, elem in zip(range(self.header_bar.child_count),
-    #                                         self.header_bar.children)}
-    #        idx = idx_dict[header]
-    #        print(idx)
-    #        self.header_bar.remove_cell(idx)
-    #        frame = self.header_to_frame[header]
-    #        frame.parent = None
-    #        del self.header_to_frame[header]
-    #        if self.current_frame == frame:
-    #            self.current_frame = None
-    #        return True
-    #    else:
-    #        return False
+    def remove(self, header):
+        idx = self._find_header_index(header)
+        self.header_bar.remove_cell(idx)
+        frame = self.header_to_frame[header]
+        frame.parent = None
 
     def _change_to_tab(self, lui_event):
         header = lui_event.sender

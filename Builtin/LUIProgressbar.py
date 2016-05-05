@@ -2,7 +2,7 @@
 from LUIObject import LUIObject
 from LUISprite import LUISprite
 
-from LUILayouts import LUIHorizontalStretchedLayout
+from LUIHorizontalStretchedLayout import LUIHorizontalStretchedLayout
 from LUILabel import LUILabel
 
 class LUIProgressbar(LUIObject):

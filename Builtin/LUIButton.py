@@ -1,6 +1,6 @@
 
 from LUIObject import LUIObject
-from LUILayouts import LUIHorizontalStretchedLayout
+from LUIHorizontalStretchedLayout import LUIHorizontalStretchedLayout
 from LUILabel import LUILabel
 from LUIInitialState import LUIInitialState
 
