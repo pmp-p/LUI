@@ -219,8 +219,10 @@ bool LUIBaseElement::request_focus() {
  */
 void LUIBaseElement::blur() {
   if (!_focused)
-    luiBaseElement_cat.warning() << "Called blur(), but element was not focused" << endl;
-  _root->request_focus(NULL);
+    luiBaseElement_cat.warning() << "Called blur(), but element was not focused, target = "
+                                 << _debug_name << endl;
+
+  _root->request_explicit_blur();
 
   // Giving away focus will always work, so we can already set our focus state
   _focused = false;
@@ -251,9 +253,20 @@ void LUIBaseElement::fetch_render_index() {
  * @param coords Optional coordinates of the event
  */
 void LUIBaseElement::trigger_event(const string& event_name, const wstring& message, const LPoint2& coords) {
-  auto elem_it = _events.find(event_name);
+  trigger_event(new LUIEventData(this, event_name, message, coords));
+}
+
+/**
+ * @brief Triggers an event
+ * @details This triggers an event with the given EventData.
+ *   If no event handler is bound to this event, nothing happens. Otherwise the
+ *   event handler is called with the event data.
+ *
+ * @param data Event data
+ */
+void LUIBaseElement::trigger_event(PT(LUIEventData) data) {
+  auto elem_it = _events.find(data->get_name());
   if (elem_it != _events.end()) {
-      PT(LUIEventData) data = new LUIEventData(this, event_name, message, coords);
       elem_it->second->do_callback(data);
   }
 }
@@ -280,7 +293,7 @@ float LUIBaseElement::get_parent_height() const {
 
 void LUIBaseElement::clear_parent() {
   if (!_parent) {
-    luiBaseElement_cat.error() << "Called clear_parent(), but no parent is set!" << endl;
+    luiBaseElement_cat.error() << "Called clear_parent(), but no parent is set! target = " << _debug_name << endl;
     return;
   }
   _parent->remove_child(this);
@@ -310,11 +323,11 @@ LVector2 LUIBaseElement::get_available_dimensions() const {
 
 void LUIBaseElement::update_dimensions() {
   if (!_size.x.has_expression()) {
-    luiBaseElement_cat.warning() << "LUIBaseElement has no valid width expression!" << endl;
+    luiBaseElement_cat.warning() << "LUIBaseElement has no valid width expression! target = " << _debug_name << endl;
   }
 
   if (!_size.y.has_expression()) {
-    luiBaseElement_cat.warning() << "LUIBaseElement has no valid height expression!" << endl;
+    luiBaseElement_cat.warning() << "LUIBaseElement has no valid height expression! target = " << _debug_name << endl;
   }
 
   LVector2 available_dimensions = get_available_dimensions();
