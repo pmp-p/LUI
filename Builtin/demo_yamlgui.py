@@ -130,7 +130,20 @@ y2 = """
             type: LUIButton
             text: line{0} row3
 """
+t1="""
+- main_button:
+    type: LUIButton
+    text: destroy me !
+    bind:
+        click: ho no !
 
+"""
+
+class TEST1(LUIYaml.YamlUI):
+
+    def event(self,e):
+        msg=LUIYaml.YamlUI.event(self,e)
+        self.deleteGui()
 
 
 
@@ -140,7 +153,7 @@ class Menu1(LUIYaml.YamlUI):
         msg=LUIYaml.YamlUI.event(self,e)
 
         self.deleteGui()
-        Menu2( parent = base.region.root, name='menu2', yaml = y2 , top=100,left=100 )
+        Menu2( parent = base.region.root, name='menu2', yaml = y2 , top=200,left=200 )
 
 class Menu2(LUIYaml.YamlUI):
 
@@ -148,10 +161,11 @@ class Menu2(LUIYaml.YamlUI):
         msg=LUIYaml.YamlUI.event(self,e)
 
         self.deleteGui()
-        Menu1( parent = base.region.root, name='menu1', yaml = y1  )
+        Menu1( parent = base.region.root, name='menu1', yaml = y1 , top=100,left=100 )
 
-Menu1( parent = base.region.root, name='menu1', yaml = y1  )
 
+TEST1( parent = base.region.root, name='menu1', yaml = t1 , top=10,left=10 )
+Menu1( parent = base.region.root, name='menu1', yaml = y1 , top=100,left=100 )
 
 
 

@@ -246,7 +246,9 @@ class YamlUI:
                     self._loadElement(name, data, obj, formatlist)
 
     def get_family_members(self,obj):
-        self.gui.append( hash(obj) )
+        hobj=hash(obj)
+        if not hobj in self.gui:
+            self.gui.append( hobj )
         if hasattr(obj,'get_children'):
             for child in obj.get_children():
                 hc=hash(child)
@@ -271,6 +273,8 @@ class YamlUI:
             #print('deleted (%s)%s ' % (luiobj.__class__.__name__,luiobj.name) )
             luiobj.unbind_all()
             luiobj.clear_parent()
+        if myid in self.gui:
+            self.gui.remove(myid)
         return True
 
 

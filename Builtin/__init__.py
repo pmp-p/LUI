@@ -19,15 +19,6 @@ def destroy(*self):
     print("</%s>" % __all__[0] )
 
 
-"""
-TODO:
-
- - name button-%i events in mousedown
- - cleanup 'Elements' : is dead code
- - tile placement , cascade replace , auto arrange
-
-"""
-
 __all__ = ['LUI',
     'LUIButton', 'LUICheckbox', 'LUIFormattedLabel', 'LUIFrame',
     'LUIInitialState', 'LUIInputField', 'LUIInputHandler', 'LUILabel', 'LUIObject',
@@ -63,7 +54,11 @@ for luie in __all__[1:]:
 LUIBaseLayout = panda3d.lui.LUIBaseLayout
 
 try:
-    pluginGlobalManager.initPlugin( sys.modules[__name__] , '%s.%s' % ( implements,__all__[0]) )
+    RunTime
+    try:
+        pluginGlobalManager.initPlugin( sys.modules[__name__] , '%s.%s' % ( implements,__all__[0]) )
+    except:
+        pass
 except:
     print("running out-of-the-box")
 
@@ -205,7 +200,7 @@ class Layouter:
 
     def begin( self, wname, klass, *argv, **kw):
         if self.anchor:
-            layout = self.__getCurrentLayout()
+            layout = self.__getCurrentLayout('LUIVerticalLayout')
             if layout:
                 warn('begin with no reset adding to current layout')
                 self.anchor = self._ladd(self.__layoutCtx, wname, klass, *argv, **kw)
@@ -215,8 +210,7 @@ class Layouter:
                 return None
             return self.anchor
 
-        for layctx in ['LUIHorizontalLayout','LUIVerticalLayout']:
-            setattr(self, layctx , None )
+        self.reset()
 
         kw.setdefault('parent',self.anchor or self)
         kw.setdefault('name',wname)
@@ -226,15 +220,22 @@ class Layouter:
 
     def setCurrentLayout(self,layctx,layout):
         if not layctx in ['LUIHorizontalLayout','LUIVerticalLayout']:
+            err("bad layout direction %s using LUIVerticalLayout",layctx)
             layctx = 'LUIVerticalLayout'
+
+        self.__layoutCtx = layctx
         setattr(self,layctx,layout)
+        print('forced %s as %s' % ( layout , self.__layoutCtx ) )
 
 
-    def __getCurrentLayout(self,layctx=None):
-        auto = layctx is not None
 
-        if not auto:
+
+    def __getCurrentLayout(self,layctx):
+        try:
+            #get current layout if any
             layctx = self.__layoutCtx
+        except:
+            pass
 
         stackparent = self.anchor or self
 
@@ -247,9 +248,16 @@ class Layouter:
             err('unsupported layout %s defaulting to vertical',layctx )
             layctx = 'LUIVerticalLayout'
 
-        if auto and layout is None:
+        if layout is None:
+
             warn('no default "%s" defined adding one to %s !',layctx, stackparent.name )
-            layout = getattr( panda3d.lui , layctx )( parent= stackparent )
+            if isinstance(stackparent, LUIBaseLayout):
+                print("parent is already a layouyt !!!",stackparent)
+                layout = getattr( panda3d.lui , layctx )( stackparent.cell() )
+                stackparent.add( layout )
+            else:
+                layout = getattr( panda3d.lui , layctx )( stackparent )
+
 
             if layctx=='LUIVerticalLayout':
                 layout.width = '100%'
@@ -267,12 +275,17 @@ class Layouter:
 
         return layout
 
+    def spacer(self,*args,**kw):
+        return getattr(self, self.__layoutCtx ).cell(*args,**kw)
+
+
+
     def layout(self):
         return self.__getCurrentLayout('LUIVerticalLayout')
 
 
     def _ladd(self,layctx, wname, klass, *argv, **kw):
-        kw['parent']='layout'
+        kw['parent'] = 'layout'
         kw['name'] = wname
 
         # hlayout vlayout
@@ -280,7 +293,12 @@ class Layouter:
 
         kw['layer'] = layout
         child =  self.new(klass,*argv,**kw)
-        layout.add(child)
+
+        if child.parent is None:
+            layout.add(child)
+        else:
+            err("something set the parent on %s to %s instead of me %s",child,child.parent,layout)
+
         return child
 
 
@@ -379,7 +397,7 @@ class Factory(Layouter):
                 fix("no %s.%s(e) handler for %s", self.__handler.__name__,self.__handler.on_prefix , fqnevt )
 
             if hasattr( self.__handler , fqnevt ):
-                print( type(self.__handler))
+                #print( type(self.__handler))
                 if repr(self.__handler.__class__)=="<type 'module'>":
                     getattr(self.__handler , fqnevt )(self.__handler, params )
                 else:
@@ -425,15 +443,12 @@ class Factory(Layouter):
 
         p = kw.setdefault('parent',self)
 
+        layer = None
+
         if p=='layout':
             kw.pop('parent')
         elif p is None:
             warn('creating an instance of class LUI%s with no parent', klass )
-
-        if 'orphan' in kw:
-            kw.pop('orphan')
-            if 'parent' in kw:
-                kw.pop('parent')
 
         pn = kw.get('parent',None)
         pn = (pn and pn.name ) or 'None'
@@ -445,11 +460,14 @@ class Factory(Layouter):
         else:
             dev("Widget.new (parent)%s -> (%s)%s", pn , klass, cn )
 
+        if layer and 'parent' in kw:
+            kw.pop('parent')
 
         if klass=='Sprite':
             wdg = getattr(panda3d.lui,klass)(p,*argv)
         else:
             wdg= getattr(panda3d.lui,klass)(*argv,**kw)
+
         if self.__handler:
             self.set_named_widget(cn, wdg )
             if klass=='Button':
@@ -519,9 +537,8 @@ class DragTool:
     def accept(self,e):
 
         if e.message:
-            btn = int(e.message)
-            if btn in (0,2):
-                self.mode = btn
+            if e.message in ('mouse-0','mouse-2'):
+                self.mode = int(e.message[-1])
                 self.is_dragging = True
                 return self.is_dragging
             print("fix no drag mode for button %s",e.message)
@@ -543,7 +560,6 @@ class DragTool:
             self.is_dragging = False
             self.current = None
             self.host.request_focus()
-
 
 
     def on_drag(dragtool,self,stat,e):
@@ -650,16 +666,17 @@ class WM_WINDOW(Factory):
             WM_WIN_HANDLER.wm_register(self)
 
         self.setCurrentLayout('LUIHorizontalLayout',self.header_bar)
+        defaults = dict( ) #top=-10)
         for ctrl in [
-                    self.hadd( '%s::WM_CLOSE' % self.name  , 'Label' ,text='X ', top=-10),
-                    self.hadd( '%s::WM_SHADE' % self.name  , 'Label' ,text=' __ ', top=-10 ),
-                    self.hadd( '%s::WM_EXPAND' % self.name , 'Label' ,text=' [_]', top=-10),
-                    self.hadd( '%s::WM_NEW' % self.name , 'Label' ,text=' +Tab', top=-10),
+                    self.hadd( '%s::WM_CLOSE' % self.name  , 'Label' ,text='X ',**defaults),
+                    self.hadd( '%s::WM_SHADE' % self.name  , 'Label' ,text=' __ ',**defaults),
+                    self.hadd( '%s::WM_EXPAND' % self.name , 'Label' ,text=' [_]',**defaults),
+                    self.hadd( '%s::WM_NEW' % self.name , 'Label' ,text=' +Tab',**defaults),
                 ]:
             ctrl.bind('click',WM_WIN_HANDLER.wm_ctrl)
             ctrl.solid = True
 
-        self.caption = self.hadd( self.name ,  'Label' ,text='             %s          '% self.name , top=-10 )
+        self.caption = self.hadd( self.name ,  'Label' ,text='             %s          '% self.name , **defaults )
 
 
     def _autoResize(self,x=0,y=0,w=0,h=0,minw=300,minh=300):
@@ -901,20 +918,38 @@ class TaskBar(LUITabbedFrame, Factory, TAB_Utils):
     DECAL = 35
 
     def __init__(self,**kw):
-        super(TaskBar,self).__init__(self, **self.getDefault(kw) )
-        Factory.__init__(self)
+        super(LUITabbedFrame,self).__init__(self, **self.getDefault(kw) )
+
         self.last = None
         LUI.taskBar = self
 
+        # The header bar
+        header_spacing = kw.get('header_spacing', 3)
+
+        Factory.__init__(self)
+
+        self.menu_bar  = LUIHorizontalLayout(parent= self,spacing = header_spacing)
+        self.setCurrentLayout('LUIHorizontalLayout',self.menu_bar)
+        self.hadd('WM_NEW','Button',bottom=self.BOTTOM ,text='P',left=-8)
+        self.hadd('WM_LIST','Button',bottom=self.BOTTOM ,text='[ win_list ]') #,left=100
+        self.spacer(10)
+
+        self.header_bar = LUIHorizontalLayout(parent= self.menu_bar.cell(),spacing = header_spacing)
+
+        self.setCurrentLayout('LUIHorizontalLayout',self.header_bar)
+
+        self.header_to_frame = {}
+        self.current_frame = None
+
     def build(self):
         self.set_handler( self )
-        self.setCurrentLayout('LUIHorizontalLayout',self.header_bar)
-        self.hadd('WM_NEW','Button',bottom=self.BOTTOM,left=self.BOTTOM,text='open')
 
 
     def on_WM_NEW_(self,e):
         global taskbar
-
+        if len(self.header_to_frame.keys())>5:
+            err("MAX LUISprite = 6")
+            return
         win = self.spawn( width='60%',height='60%', **self.__cascade()  )
         return self.add( win.name , win ) or win
 
@@ -927,11 +962,12 @@ class TaskBar(LUITabbedFrame, Factory, TAB_Utils):
         if isinstance(header, str):
             if len(header)>15:
                 header = header[:5]+'...'+header[-5:]
+        header = self.hadd( '%s::WM_STATUS' % frame.name , 'Button',text = header,bottom=self.BOTTOM )
+        #header.hide()
+            #header = LUIButton(parent=self.header_bar, text = header,bottom=self.BOTTOM )
+            #header.name = '%s::WM_STATUS' % frame.name
 
-            header = LUIButton(text = header,bottom=self.BOTTOM )
-            header.name = '%s::WM_STATUS' % frame.name
-
-        self.header_bar.add(header, "?")
+        #self.header_bar.add(header) #, "?")
         self.header_to_frame[header] = frame
         header.solid = True
         header.bind("click", self._change_to_tab)
@@ -939,8 +975,6 @@ class TaskBar(LUITabbedFrame, Factory, TAB_Utils):
         # Put frame in front
         #if self.current_frame is None:
         self._change_to_tab( None, header )
-
-
 
 
     def _change_to_tab(self, lui_event=None, header=None):
@@ -1050,9 +1084,9 @@ if __name__ == '__main__':
             return task.cont
 
 
-    else:
-        lui = LUI()
-        lui.build()
+
+    lui = LUI()
+    lui.build()
 
     class autoidx:
         def __init__(self):
@@ -1071,18 +1105,22 @@ if __name__ == '__main__':
         pass
 
         def build(self):
-            d = { 'section1' : [0,1,2,3] ,'section2' : [4,5,6,7] }
+            d = { 'section1' : [0,1,2,3] ,'section2' : [4,5,6,7] ,'section3' : [8,9,10,11] }
             keys = d.keys()
             keys.sort()
             Sect = autoidx()
+            self.anchor = self
 
-            for k in keys:
+            for i,k in enumerate(keys):
                 v=d[k]
 
                 sect = Sect()
                 self.vadd( sect ,'Label',text='[-] %s' % k)
                 SubSect = autoidx()
-                subf = self.vadd('zone_%s'% sect  ,'Widget',orphan=True,left=20,top=4)
+
+                subf = self.vadd('zone_%s'% sect  ,'Widget') #,left=20,top=20,height='100%')
+                #print(  subf.parent.name )
+
                 for elem in v:
                     #subf.vadd( SubSect() , 'Label', text = str(v) )
 
@@ -1094,17 +1132,10 @@ if __name__ == '__main__':
 
 
 
-
-    taskbar = TaskBar(width='100%',height=24,left=0,top=0)
-
-    win = taskbar.on_WM_NEW_(None)
-    print(win)
-
-    WM_WIN_HANDLER.wm_ctrl(win=win,wm_event="WM_NEW")
-
-
-
-
+    taskbar = TaskBar(width='100%',height=18,left=0,top=0)
+    if 0:
+        win = taskbar.on_WM_NEW_(None)
+        WM_WIN_HANDLER.wm_ctrl(win=win,wm_event="WM_NEW")
 
 
     if RunTime.OOTB:
