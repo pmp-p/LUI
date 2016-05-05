@@ -17,7 +17,7 @@ please read the disclaimer at the top
 
 ### Running the Samples
 
-look at the end of Builtin/__init__.py
+look at the end of dunder init.py in Builtin
 
 ### Documentation
 
