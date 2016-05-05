@@ -200,9 +200,10 @@ class YamlUI:
 
             if not parentToLayout:
                 kw["parent"] = parent
-
-            elif layoutChild: # LUILayouts need a parent object passed
-                kw.setdefault("parent", LUIObject() )
+            else:
+                parent_dummy = LUIObject()
+                if layoutChild: # LUILayouts need a parent object passed
+                    kw.setdefault("parent", parent_dummy )
 
 
 
