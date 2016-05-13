@@ -2,7 +2,7 @@
 from LUIObject import LUIObject
 from LUISprite import LUISprite
 from LUIInitialState import LUIInitialState
-from LUIHorizontalStretchedLayout import LUIHorizontalStretchedLayout
+from LUILayouts import LUIHorizontalStretchedLayout
 
 class LUIScrollableRegion(LUIObject):
 

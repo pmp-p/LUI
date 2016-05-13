@@ -2,8 +2,7 @@
 from LUIObject import LUIObject
 from LUISprite import LUISprite
 from LUILabel import LUILabel
-from LUICornerLayout import LUICornerLayout
-from LUIHorizontalStretchedLayout import LUIHorizontalStretchedLayout
+from LUILayouts import LUICornerLayout, LUIHorizontalStretchedLayout
 from LUIInitialState import LUIInitialState
 
 from functools import partial
